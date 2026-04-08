@@ -1,4 +1,4 @@
-const API = "https://fashionpalacesystem-production.up.railway.app/";
+const API = "https://fashionpalacesystem-production.up.railway.app";
 
 // LOAD PRODUCTS
 function loadProducts() {
