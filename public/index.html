@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FashionPalaceTT Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+  <img src="logo.png" alt="FashionPalaceTT Logo" class="logo">
+  <h1>FashionPalaceTT</h1>
+  <p>Inventory & Sales Dashboard</p>
+</div>
+
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+      <div class="card">
+        <h3>Total Sales Revenue</h3>
+        <p id="totalRevenue">$0</p>
+      </div>
+
+      <div class="card">
+        <h3>Total Units Sold</h3>
+        <p id="totalUnitsSold">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Total Products</h3>
+        <p id="totalProducts">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Low Stock Items</h3>
+        <p id="lowStockCount">0</p>
+      </div>
+    </div>
+
+    <!-- ADD PRODUCT FORM -->
+    <div class="form">
+      <input type="text" id="name" placeholder="Product Name">
+      <input type="number" id="quantity" placeholder="Quantity">
+      <input type="number" id="price" placeholder="Price">
+      <button onclick="addProduct()">Add Product</button>
+    </div>
+
+    <!-- SEARCH -->
+    <input type="text" id="search" placeholder="Search products..." onkeyup="loadProducts()">
+
+    <!-- INVENTORY VALUE -->
+    <h3 id="totalValue">Total Value: $0</h3>
+
+    <!-- PRODUCTS -->
+    <h2>Products</h2>
+    <ul id="productList"></ul>
+
+    <!-- SALES HISTORY -->
+    <h2>Sales History</h2>
+    <ul id="salesList"></ul>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
