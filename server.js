@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const db = require('./db');
 
 const app = express();
@@ -8,6 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/test-api', (req, res) => {
     res.json({ message: 'API is working' });
@@ -35,7 +37,7 @@ app.post('/products', (req, res) => {
     db.query(
         'INSERT INTO products (name, quantity, price) VALUES (?, ?, ?)',
         [name, quantity, price],
-        (err, result) => {
+        (err) => {
             if (err) {
                 console.error('Add product error:', err);
                 return res.status(500).json({ message: 'Insert failed' });
@@ -51,7 +53,7 @@ app.delete('/products/:id', (req, res) => {
     db.query(
         'DELETE FROM products WHERE id = ?',
         [id],
-        (err, result) => {
+        (err) => {
             if (err) {
                 console.error('Delete product error:', err);
                 return res.status(500).json({ message: 'Delete failed' });
@@ -117,6 +119,7 @@ app.put('/sell/:id', (req, res) => {
         );
     });
 });
+
 app.get('/sales', (req, res) => {
     const sql = `
         SELECT sales.id, products.name, sales.quantity_sold, sales.total_price, sales.sale_date
@@ -133,6 +136,7 @@ app.get('/sales', (req, res) => {
         res.json(results);
     });
 });
+
 app.put('/products/:id', (req, res) => {
     const id = req.params.id;
     const { name, quantity, price } = req.body;
@@ -158,6 +162,11 @@ app.put('/products/:id', (req, res) => {
         }
     );
 });
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
