@@ -2,20 +2,84 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const session = require('express-session');
 const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'fallback_secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 2
+    }
+}));
+
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+
+function requireAuth(req, res, next) {
+    if (req.session && req.session.loggedIn) {
+        return next();
+    }
+    return res.status(401).json({ message: 'Unauthorized' });
+}
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    const adminUser = process.env.ADMIN_USERNAME;
+    const adminPass = process.env.ADMIN_PASSWORD;
+
+    if (username === adminUser && password === adminPass) {
+        req.session.loggedIn = true;
+        req.session.username = username;
+        return res.json({ message: 'Login successful' });
+    }
+
+    return res.status(401).json({ message: 'Invalid username or password' });
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/login');
+    });
+});
+
+app.get('/check-auth', (req, res) => {
+    if (req.session && req.session.loggedIn) {
+        return res.json({ loggedIn: true });
+    }
+    return res.status(401).json({ loggedIn: false });
+});
+
+app.get('/', (req, res) => {
+    if (req.session && req.session.loggedIn) {
+        return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
+    return res.redirect('/login');
+});
 
 app.get('/test-api', (req, res) => {
     res.json({ message: 'API is working' });
 });
 
-app.get('/products', (req, res) => {
+app.get('/products', requireAuth, (req, res) => {
     db.query('SELECT * FROM products', (err, results) => {
         if (err) {
             console.error('Get products error:', err);
@@ -25,10 +89,8 @@ app.get('/products', (req, res) => {
     });
 });
 
-app.post('/products', (req, res) => {
+app.post('/products', requireAuth, (req, res) => {
     const { name, quantity, price } = req.body;
-
-    console.log('Add product body:', req.body);
 
     if (!name || quantity === undefined || price === undefined) {
         return res.status(400).json({ message: 'Missing fields' });
@@ -47,7 +109,7 @@ app.post('/products', (req, res) => {
     );
 });
 
-app.delete('/products/:id', (req, res) => {
+app.delete('/products/:id', requireAuth, (req, res) => {
     const id = req.params.id;
 
     db.query(
@@ -64,7 +126,7 @@ app.delete('/products/:id', (req, res) => {
     );
 });
 
-app.put('/sell/:id', (req, res) => {
+app.put('/sell/:id', requireAuth, (req, res) => {
     const id = req.params.id;
     const qty = parseInt(req.body.quantity);
 
@@ -120,7 +182,7 @@ app.put('/sell/:id', (req, res) => {
     });
 });
 
-app.get('/sales', (req, res) => {
+app.get('/sales', requireAuth, (req, res) => {
     const sql = `
         SELECT sales.id, products.name, sales.quantity_sold, sales.total_price, sales.sale_date
         FROM sales
@@ -137,7 +199,7 @@ app.get('/sales', (req, res) => {
     });
 });
 
-app.put('/products/:id', (req, res) => {
+app.put('/products/:id', requireAuth, (req, res) => {
     const id = req.params.id;
     const { name, quantity, price } = req.body;
 
@@ -161,10 +223,6 @@ app.put('/products/:id', (req, res) => {
             res.json({ message: 'Product updated successfully' });
         }
     );
-});
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {

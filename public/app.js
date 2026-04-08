@@ -1,4 +1,13 @@
 const API = "https://fashionpalacesystem-production.up.railway.app";
+fetch("/check-auth")
+    .then(res => {
+        if (!res.ok) {
+            window.location.href = "/login";
+        }
+    })
+    .catch(() => {
+        window.location.href = "/login";
+    });
 
 // LOAD PRODUCTS
 function loadProducts() {
@@ -223,6 +232,9 @@ function editProduct(id, currentName, currentQuantity, currentPrice) {
             console.error("Edit product error:", err);
             alert("Failed to update product");
         });
+}
+function logout() {
+    window.location.href = "/logout";
 }
 // PAGE LOAD
 window.onload = function () {
